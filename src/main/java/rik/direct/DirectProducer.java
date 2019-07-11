@@ -36,7 +36,7 @@ public class DirectProducer implements Runnable {
             log.info("Created producer for the topic {}", topicName);
 
             long start = System.currentTimeMillis();
-            for (int i = 1; i < 1000001; i++) {
+            for (int i = 1; i <= 1000000; i++) {
                 try {
                     producer.send(String.valueOf(i).getBytes());
                 } catch (Exception e) {

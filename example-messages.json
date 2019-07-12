@@ -1,7 +1,7 @@
 [
-  {"ratio": 2, "body": "{\"field\": \"data\", \"count\": ${id}}"},
-  {"ratio": 2, "body": "{\"field\": \"data\", \"count\": ${id}}"},
-  {"ratio": 2, "body": "{\"field\": \"data\", \"count\": ${id}}"},
-  {"ratio": 2, "body": "{\"field\": \"data\", \"count\": ${id}}"},
-  {"ratio": 2, "body": "{\"field\": \"data\", \"count\": ${id}}"}
+  {"ratio": 2, "body": {"field": "data", "count": "${id}"}},
+  {"ratio": 2, "body": {"field": "data", "count": "${id}"}},
+  {"ratio": 2, "body": {"field": "data", "count": "${id}"}},
+  {"ratio": 2, "body": {"field": "data", "count": "${id}"}},
+  {"ratio": 2, "body": {"field": "data", "count": "${id}"}}
 ]

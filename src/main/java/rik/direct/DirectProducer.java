@@ -54,7 +54,7 @@ public class DirectProducer implements Runnable {
                     });
                     for (Message message : list) {
                         for (int i = 0; i < message.getRatio(); i++) {
-                            messages.add(message.getBody());
+                            messages.add(message.getBody().asText());
                         }
                     }
                     Collections.shuffle(messages);

@@ -1,8 +1,10 @@
 package rik.direct;
 
+import org.apache.pulsar.shade.com.fasterxml.jackson.databind.JsonNode;
+
 public class Message {
     private int ratio;
-    private String body;
+    private JsonNode body;
 
     public int getRatio() {
         return ratio;
@@ -12,11 +14,11 @@ public class Message {
         this.ratio = ratio;
     }
 
-    public String getBody() {
+    public JsonNode getBody() {
         return body;
     }
 
-    public void setBody(String body) {
+    public void setBody(JsonNode body) {
         this.body = body;
     }
 }

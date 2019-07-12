@@ -1,25 +1,76 @@
 package rik.direct;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.pulsar.client.api.CompressionType;
 import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.impl.ClientBuilderImpl;
+import org.apache.pulsar.shade.com.fasterxml.jackson.core.JsonProcessingException;
+import org.apache.pulsar.shade.com.fasterxml.jackson.core.type.TypeReference;
+import org.apache.pulsar.shade.com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class DirectProducer implements Runnable {
 
     private static final Logger log = LoggerFactory.getLogger(DirectProducer.class);
     private static final String SERVICE_URL = "pulsar://localhost:6650";
     private String topicName = "persistent://public/default/datacentre-";
+    private static List<String> messages;
 
     private DirectProducer(String arg) {
         topicName += arg;
     }
 
     public static void main(String[] args) {
-        for (String arg : args) {
-            new Thread(new DirectProducer(arg)).start();
+        Options options = new Options();
+        options.addOption("f","filename", true, "Name of file containing message body templates");
+        options.addRequiredOption("t", "topics", true, "csv of topic numbers");
+        options.addOption("h", "help", false, "Display usage");
+        CommandLineParser parser = new DefaultParser();
+        try {
+            CommandLine cmd = parser.parse( options, args);
+            if(cmd.hasOption('h')) {
+                throw new ParseException("help needed");
+            }
+            messages = new ArrayList<>();
+            if (cmd.hasOption("f")) {
+                ObjectMapper mapper = new ObjectMapper();
+                try (InputStream fileStream = new FileInputStream(cmd.getOptionValue("f"))) {
+                    List<Message> list = mapper.readValue(fileStream, new TypeReference<List<Message>>() {
+                    });
+                    for (Message message : list) {
+                        for (int i = 0; i < message.getRatio(); i++) {
+                            messages.add(message.getBody());
+                        }
+                    }
+                    Collections.shuffle(messages);
+                }
+            } else {
+                messages.add("{\"count\": ${id}}");
+            }
+            String[] topics = cmd.getOptionValue("t").split(",");
+            for (String topic : topics) {
+                new Thread(new DirectProducer(topic)).start();
+            }
+        } catch (ParseException e) {
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp( "DirectProducer", options );
+        } catch (IOException e) {
+            log.error("Problem with message template file", e);
         }
     }
 
@@ -36,9 +87,9 @@ public class DirectProducer implements Runnable {
             log.info("Created producer for the topic {}", topicName);
 
             long start = System.currentTimeMillis();
-            for (int i = 1; i <= 1000000; i++) {
+            for (int i = 1; i <= 100; i++) {
                 try {
-                    producer.send(String.valueOf(i).getBytes());
+                    producer.send(messages.get(i % messages.size()).replace("${id}", String.valueOf(i)).getBytes());
                 } catch (Exception e) {
                     log.error(e.getMessage());
                 }

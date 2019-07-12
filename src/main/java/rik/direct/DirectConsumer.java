@@ -6,10 +6,12 @@ import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.api.SubscriptionType;
 import org.apache.pulsar.client.impl.ClientBuilderImpl;
+import org.apache.pulsar.shade.com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.StringReader;
 
 public class DirectConsumer implements Runnable {
 
@@ -17,9 +19,11 @@ public class DirectConsumer implements Runnable {
     private static final String SERVICE_URL = "pulsar://localhost:6650";
     private String topicName = "persistent://public/default/datacentre-";
     private static final String SUBSCRIPTION_NAME = "test-subscription";
+    private ObjectMapper objectMapper;
 
     private DirectConsumer(String args) {
-            topicName = topicName + args;
+        topicName = topicName + args;
+        objectMapper = new ObjectMapper();
     }
 
     public static void main(String[] args) {
@@ -45,8 +49,10 @@ public class DirectConsumer implements Runnable {
                 Message<byte[]> msg = consumer.receive();
                 consumer.acknowledge(msg);
                 count++;
-                if (count % 10000 == 0) {
-                    log.info("Topic: " + topicName + " count: " + count + " message body: " + new String(msg.getData()));
+                if (count % 100 == 0) {
+                    String message = new String(msg.getData());
+                    int messageCount = objectMapper.readTree(new StringReader(message)).get("count").asInt();
+                    log.info("Topic: " + topicName + " count: " + count + " message count: " + messageCount);
                 }
             } while (true);
         } catch (Exception e) {}

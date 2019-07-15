@@ -27,8 +27,9 @@ import java.util.List;
 public class DirectProducer implements Runnable {
 
     private static final Logger log = LoggerFactory.getLogger(DirectProducer.class);
-    private static final String SERVICE_URL = "pulsar://localhost:6650";
-    private String topicName = "persistent://public/default/datacentre-";
+    private static int noOfMessages = 10000;
+    private static String SERVICE_URL = "pulsar://localhost:6650";
+    private String topicName = "persistent://public/default/test-";
     private static List<String> messages;
 
     private DirectProducer(String arg) {
@@ -39,12 +40,17 @@ public class DirectProducer implements Runnable {
         Options options = new Options();
         options.addOption("f","filename", true, "Name of file containing message body templates");
         options.addRequiredOption("t", "topics", true, "csv of topic numbers");
+        options.addOption("r", "repetitions", true, "Number of messages to send to each topic");
+        options.addOption("u", "url", true, "Url for pulsar defaults to 'pulsar://localhost:6650'");
         options.addOption("h", "help", false, "Display usage");
         CommandLineParser parser = new DefaultParser();
         try {
             CommandLine cmd = parser.parse( options, args);
-            if(cmd.hasOption('h')) {
+            if (cmd.hasOption('h')) {
                 throw new ParseException("help needed");
+            }
+            if (cmd.hasOption('u')) {
+                SERVICE_URL = cmd.getOptionValue('u');
             }
             messages = new ArrayList<>();
             if (cmd.hasOption("f")) {
@@ -87,7 +93,7 @@ public class DirectProducer implements Runnable {
             log.info("Created producer for the topic {}", topicName);
 
             long start = System.currentTimeMillis();
-            for (int i = 1; i <= 100; i++) {
+            for (int i = 1; i <= noOfMessages; i++) {
                 try {
                     producer.send(messages.get(i % messages.size()).replace("${id}", String.valueOf(i)).getBytes());
                 } catch (Exception e) {

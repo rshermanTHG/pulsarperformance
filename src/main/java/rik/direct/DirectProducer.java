@@ -107,7 +107,7 @@ public class DirectProducer implements Runnable {
                     String m = messages.get(i % messages.size()).replace("${id}", String.valueOf(i));
                     producer.send(m.getBytes());
                     // log message at trace for message file
-                    log.trace("Sent message: "+ m);
+                    log.debug("Sent message: "+ m);
                 } catch (Exception e) {
                     log.error(e.getMessage());
                 }

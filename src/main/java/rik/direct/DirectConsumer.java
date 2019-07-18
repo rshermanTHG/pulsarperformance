@@ -9,14 +9,12 @@ import org.apache.commons.cli.ParseException;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.PulsarClient;
-import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.api.SubscriptionType;
 import org.apache.pulsar.client.impl.ClientBuilderImpl;
 import org.apache.pulsar.shade.com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.io.StringReader;
 
 public class DirectConsumer implements Runnable {
@@ -73,12 +71,17 @@ public class DirectConsumer implements Runnable {
                 Message<byte[]> msg = consumer.receive();
                 consumer.acknowledge(msg);
                 count++;
+                String message = new String(msg.getData());
+                // log message at trace level for message log
+                log.trace("Received message: "+ message);
                 if (count % 100 == 0) {
-                    String message = new String(msg.getData());
                     int messageCount = objectMapper.readTree(new StringReader(message)).get("count").asInt();
                     log.info("Topic: " + topicName + " count: " + count + " message count: " + messageCount);
                 }
             } while (true);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            log.error("Encountered exception: "+ e);
+            e.printStackTrace();
+        }
     }
 }

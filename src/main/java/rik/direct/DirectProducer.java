@@ -10,14 +10,12 @@ import org.apache.pulsar.client.api.CompressionType;
 import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.impl.ClientBuilderImpl;
-import org.apache.pulsar.shade.com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.pulsar.shade.com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.pulsar.shade.com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -27,7 +25,7 @@ import java.util.List;
 public class DirectProducer implements Runnable {
 
     private static final Logger log = LoggerFactory.getLogger(DirectProducer.class);
-    private static int noOfMessages = 10000;
+    private static int noOfMessages = 1000;
     private static String SERVICE_URL = "pulsar://localhost:6650";
     private String topicName = "persistent://public/default/test-";
     private static List<String> messages;
@@ -49,9 +47,20 @@ public class DirectProducer implements Runnable {
             if (cmd.hasOption('h')) {
                 throw new ParseException("help needed");
             }
+
             if (cmd.hasOption('u')) {
                 SERVICE_URL = cmd.getOptionValue('u');
             }
+
+            // set number of messages from r= parameter
+            if (cmd.hasOption('r')) {
+                try {
+                    noOfMessages = Integer.parseInt(cmd.getOptionValue('r'), 10);
+                } catch (Exception e) {
+                    System.out.println("Unable to parse value for repetitions (r) value, default repetitions [" + noOfMessages +"] used.");
+                }
+            }
+
             messages = new ArrayList<>();
             if (cmd.hasOption("f")) {
                 ObjectMapper mapper = new ObjectMapper();
@@ -95,7 +104,10 @@ public class DirectProducer implements Runnable {
             long start = System.currentTimeMillis();
             for (int i = 1; i <= noOfMessages; i++) {
                 try {
-                    producer.send(messages.get(i % messages.size()).replace("${id}", String.valueOf(i)).getBytes());
+                    String m = messages.get(i % messages.size()).replace("${id}", String.valueOf(i));
+                    producer.send(m.getBytes());
+                    // log message at trace for message file
+                    log.debug("Sent message: "+ m);
                 } catch (Exception e) {
                     log.error(e.getMessage());
                 }

@@ -25,7 +25,7 @@ import java.util.List;
 public class DirectProducer implements Runnable {
 
     private static final Logger log = LoggerFactory.getLogger(DirectProducer.class);
-    private static int noOfMessages = 1000;
+    private static long noOfMessages = 1000;
     private static String SERVICE_URL = "pulsar://localhost:6650";
     private String topicName = "persistent://public/default/test-";
     private static List<String> messages;
@@ -38,7 +38,7 @@ public class DirectProducer implements Runnable {
         Options options = new Options();
         options.addOption("f","filename", true, "Name of file containing message body templates");
         options.addRequiredOption("t", "topics", true, "csv of topic numbers");
-        options.addOption("r", "repetitions", true, "Number of messages to send to each topic");
+        options.addOption("r", "repetitions", true, "Number of messages to send to each topic (can use ',' thousand separator)");
         options.addOption("u", "url", true, "Url for pulsar defaults to 'pulsar://localhost:6650'");
         options.addOption("h", "help", false, "Display usage");
         CommandLineParser parser = new DefaultParser();
@@ -55,7 +55,10 @@ public class DirectProducer implements Runnable {
             // set number of messages from r= parameter
             if (cmd.hasOption('r')) {
                 try {
-                    noOfMessages = Integer.parseInt(cmd.getOptionValue('r'), 10);
+                    noOfMessages = Long.parseLong(cmd.getOptionValue('r').replace(",",""), 10);
+                    if (noOfMessages <= 0) {
+                        noOfMessages = Long.MAX_VALUE;
+                    }
                 } catch (Exception e) {
                     System.out.println("Unable to parse value for repetitions (r) value, default repetitions [" + noOfMessages +"] used.");
                 }
@@ -102,12 +105,12 @@ public class DirectProducer implements Runnable {
             log.info("Created producer for the topic {}", topicName);
 
             long start = System.currentTimeMillis();
-            for (int i = 1; i <= noOfMessages; i++) {
+            for (long i = 1; i <= noOfMessages; i++) {
                 try {
-                    String m = messages.get(i % messages.size()).replace("${id}", String.valueOf(i));
+                    String m = messages.get((int)(i % messages.size())).replace("${id}", String.valueOf(i));
                     producer.send(m.getBytes());
                     // log message at trace for message file
-                    log.debug("Sent message: "+ m);
+                    log.debug("Sent message: " + m);
                 } catch (Exception e) {
                     log.error(e.getMessage());
                 }

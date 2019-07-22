@@ -25,7 +25,7 @@ If a file is specified then larger messages and messages of varied sizes can be 
 | -t      | --topics | true | Csv list of topics. All topic names are prepended with test- |
 | -u      | --url      |   false | Service url for a broker/proxy. defaults to `pulsar://localhost:6650` |
 | -h | --help      |    false | Displays help text |
-| -r | --repetitions | false | number of messages to send to each topic. Defaults to 10,000 |
+| -r | --repetitions | false | number of messages to send to each topic. Can use ',' separator for ease of input. If 0 or less is sent will use Long.MAX_VALUE to keep on going and going. Defaults to 1,000. |
 | -f | --filename | false | file to use as a template for messages |
 
 ### Template file format

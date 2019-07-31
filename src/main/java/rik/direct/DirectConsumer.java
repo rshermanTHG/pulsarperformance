@@ -73,7 +73,7 @@ public class DirectConsumer implements Runnable {
                 count++;
                 String message = new String(msg.getData());
                 // log message at trace level for message log
-                log.debug("Received message: "+ message);
+                log.debug("Received message: "+ message + " from topic " + topicName);
                 if (count % 100 == 0) {
                     int messageCount = objectMapper.readTree(new StringReader(message)).get("count").asInt();
                     log.info("Topic: " + topicName + " count: " + count + " message count: " + messageCount);
